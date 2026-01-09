@@ -2,7 +2,8 @@ pico-8 cartridge // http://www.pico-8.com
 version 43
 __lua__
 function mamajama()
-	print("one mean mama jama")
+	print("⌂ilamanjaro mor like cool")
+	x = 10
 end
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
