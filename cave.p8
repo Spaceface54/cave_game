@@ -1,10 +1,38 @@
 pico-8 cartridge // http://www.pico-8.com
 version 43
 __lua__
-function mamajama()
-	print("⌂ilamanjaro mor like cool")
-	x = 10
+--global vars
+pl = {
+	x = 0,
+	y = 0,
+	spe = 1,
+}
+
+--base functions
+
+function _init()
 end
+
+function _update()
+
+	if btn(⬆️) then pl.y-=pl.spe end
+	if btn(⬇️) then pl.y+=pl.spe end
+	if btn(⬅️) then pl.x-=pl.spe end
+	if btn(➡️) then pl.x+=pl.spe end
+	
+end
+
+function _draw()
+	cls(0)
+	camera(pl.x-64,pl.y-64)
+	map(64,64,0,0)
+	
+	spr(64,pl.x,pl.y,2,2)
+end
+
+
+
+--helper functions
 __gfx__
 00000000000000002222222222222222222222220000000000808888008888000000888000000000000000000011110001000010000000000000000000000000
 00000000000000222222211112222211222122222220000000800888000888000000088000000000000000000010100001100110001110000000000000000000
