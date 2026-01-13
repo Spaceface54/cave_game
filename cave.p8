@@ -1,7 +1,7 @@
 pico-8 cartridge // http://www.pico-8.com
 version 43
 __lua__
---global vars
+--main
 
 node = {
 	x = 0,
@@ -55,6 +55,9 @@ function _draw()
 	-- collision shape debugging--
 	rect(pl.x+2, pl.y+4, pl.x + 15, pl.y+9, 8)
 	
+	-- raycast debug
+	flash(pl.x, pl.y, 0, 50)
+	
 	--draw nodes--
 	foreach(nodes, node.draw)
 end
@@ -88,6 +91,43 @@ function is_colliding(obj_x, obj_y)
 		return false
 	end
 end
+
+function flash(sx,sy,a,l)
+	local r = 0.07 --cone angle width
+	local p = ceil(sin(-r)*2.6*l)--partitions
+	print(p)
+	local i = -p/2
+	
+	local pts = {}
+	while i<=(p/2) do
+		local res = raycast(sx, sy, a+r*i/(p/2),l)
+		add(pts,res)
+		--line(sx, sy, res.x, res.y, l)
+		
+		i+=1
+	end
+
+end
+
+--startx, starty, angle 0-1, length
+function raycast(sx,sy,a,l)
+	local d = 1 --change in length
+	local c = d -- curr length
+	
+	while c < l do
+		local cx = sx+cos(a)*c
+		local cy = sy+sin(a)*c
+		
+		pset(cx,cy,11)
+		if fget(mget(cx/8,cy/8),0) then
+			return {x=cx,y=cy}
+		end
+		
+		c+=d
+	end
+	return {x = sx+cos(a)*l, y = sy+sin(a)*l}
+end
+
 
 
 -->8
