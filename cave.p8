@@ -20,6 +20,9 @@ node = {
 
 nodes = {}
 
+silt_timer = 0
+silt_max = 80
+silt_sz_up = 5
 --base functions
 
 function _init()
@@ -47,8 +50,15 @@ function _update()
 			--]]
 		pl.x = last_x 
 		pl.y = last_y
+		start_silt_time()
 	end
 	
+	if silt_timer > 0 then
+		silt_timer-=1
+		silt_sz_up+=0.8
+	else
+		silt_timer = 0
+	end
 	
 end
 
@@ -67,6 +77,13 @@ function _draw()
 	--draw nodes--
 	foreach(nodes, node.draw)
 	
+--	c = cocreate(make_silt)
+--	while costatus(c) =="suspended" and costatus(c)~="dead" do 
+	if silt_timer > 0 then
+ 	fillp(0b0011010101101000.100)
+		circfill(pl.x, pl.y, silt_sz_up, 1)
+		fillp(0)
+	end 
 end
 
 
@@ -174,7 +191,16 @@ function raycast(sx,sy,a,l)
 	return {x = sx+cos(a)*l, y = sy+sin(a)*l}
 end
 
+function start_silt_time()
+	if silt_timer == 0 then
+		silt_timer = silt_max
+		silt_sz_up = 5
+	end
+end
 
+function make_silt()
+	for i = 0, 75 do circfill(pl.x, pl.y, i, 0x4f) yield() end
+end 
 
 -->8
 --player
