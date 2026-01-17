@@ -26,30 +26,30 @@ silt_sz_up = 5
 --base functions
 
 function _init()
-	pl.x = 20
+	pl.init(pl)
+	pl.pos.x = 20
+	test = vec2:new(2,2)
+	
+	
 	--decomp(-5,-5,132,132,ti,0)
 end
 
 function _update()
 	
-	local last_x=pl.x
-	local last_y=pl.y
-	
-	if btn(⬆️) then pl.y-=pl.spe end
-	if btn(⬇️) then pl.y+=pl.spe end
-	if btn(⬅️) then pl.x-=pl.spe end
-	if btn(➡️) then pl.x+=pl.spe end
-	if btnp(❎) and btnp(🅾️) then drop_node(pl.x, pl.y) end
+	local last_x=pl.pos.x
+	local last_y=pl.pos.y
+	pl:move()
 	
 	
-	if map_colliding(pl.x,pl.y) then
+	
+	if map_colliding(pl.pos.x,pl.pos.y) then
 		--[[ ideal: have some sort of 
 							feedback that the player
 							moving back to their 
 							last position
 			--]]
-		pl.x = last_x 
-		pl.y = last_y
+		pl.pos.x = last_x 
+		pl.pos.y = last_y
 		start_silt_time()
 	end
 	
@@ -64,15 +64,19 @@ end
 
 function _draw()
 	cls(0)
-	camera(pl.x-64,pl.y-64)
---	map(0,0,-64,-64)
+	
+	camera(pl.pos.x-64,pl.pos.y-64)
+----	map(0,0,-64,-64)
 	map()
-	spr(64,pl.x,pl.y,2,2)
+	spr(64,pl.pos.x,pl.pos.y,2,2)
+	print(pl.pos.x..", "..pl.pos.y,pl.pos.x,pl.pos.y,10)
+	--spr_r(0,4,pl.x,pl.y,2,2,false,false,8,8,0.1,0)
 	-- collision shape debugging--
-	rect(pl.x+4, pl.y+4, pl.x + 10, pl.y+6, 8)
+	rect(pl.pos.x+4, pl.pos.y+4, pl.pos.x + 10, pl.pos.y+6, 8)
 	
 	-- raycast debug
-	flash(pl.x, pl.y, 0, 50)
+	flash(pl.pos.x, pl.pos.y, 0, 50, 3)
+	
 	
 	--draw nodes--
 	foreach(nodes, node.draw)
@@ -80,19 +84,99 @@ function _draw()
 --	while costatus(c) =="suspended" and costatus(c)~="dead" do 
 	if silt_timer > 0 then
  	fillp(0b0011010101101000.100)
-		circfill(pl.x, pl.y, silt_sz_up, 1)
+		circfill(pl.pos.x, pl.pos.y, silt_sz_up, 1)
 		fillp(0)
 	end 
 	
+	print(pl.pos.x..", "..pl.pos.y,pl.pos.x,pl.pos.y,10)
 end
+-->8
+--player & physics
+pl=setmetatable({
+	init=function(_ENV)
+		pos=vec2:new(0,0)
+		node_ct=20
+		vel=vec2:new(0,0)
+		acc=0.2
+		max_vel=2
+		fric=-0.01
+		ang=0
+	end,
+	move=function(_ENV)
+	
+		if btn(⬆️) then add_acc(vel,vec2:new(0,-acc)) end
+		if btn(⬇️) then add_acc(vel,vec2:new(0,acc)) end
+		if btn(⬅️) then add_acc(vel,vec2:new(-acc,0)) end
+		if btn(➡️) then add_acc(vel,vec2:new(acc,0)) end
+		if btnp(❎) and btnp(🅾️) then drop_node(pos) end
+		
+		--friction
+		local n = vel:norm()
+	 if n.x==0 and n.y==0 then
+	 	vel.x=0
+	 	vel.y=0
+	 else
+	 	add_acc(vel,n*fric)
+	 end
+		
+		--limit vel
+		if vel:mag()>max_vel then
+		 vel=vel:norm()*max_vel
+		end
+		
+		--change pos
+		add_acc(pos,vel)
+	end,
+	
+	draw=function(_ENV)
+		
+	end,
+
+},{__index=_ENV})
 
 
+--physics functions (framerate dependent)
+vec2={
+	x=0,
+	y=0,
+	new=function(self,x,y)
+		local obj = {x=x,y=y}
+		local mtbl = {
+			__index=self,
+			__mul=function(v1,c)
+				return vec2:new(v1.x*c,v1.y*c)
+			end
+		}
+		return setmetatable(obj, mtbl)
+	end,
+	
+	mag=function(self)
+		return sqrt((self.x*self.x)+(self.y*self.y))
+	end,
+	
+	norm=function(self)
+		if self:mag()<0.005 then return vec2:new(0,0) end
+		return vec2:new(self.x/self:mag(),self.y/self:mag())
+	end
+}
+
+function add_acc(v,a)
+	v.x+=a.x
+	v.y+=a.y
+end
+-->8
+--comp vars
+--title screen (assume black)
+ti="1256-8x14-115-8x22-108-8x28-103-8x32-99-8x36-95-8x40-91-8x44-88-8x46-86-8x48-83-8x52-80-8x54-78-8x56-76-8x58-74-8x60-73-8x60-72-8x62-70-8x64-68-8x66-67-8x66-66-8x68-65-8x68-64-8x70-63-8x70-62-8x72-61-8x72-60-8x74-59-8x74-59-8x74-58-8x76-57-8x76-57-8x76-57-8x76-56-8x78-55-8x78-55-8x78-55-8x78-55-8x78-55-8x78-55-8x78-55-8x78-55-8x78-55-8x78-55-8x78-55-8x78-56-8x76-57-8x76-57-8x76-57-8x76-58-8x74-59-8x74-59-8x74-60-8x31-2x10-8x31-61-8x29-2x14-8x29-62-8x26-2x5-1x8-2x5-8x26-63-8x24-2x5-1x12-2x5-8x24-64-8x21-2x5-1x16-2x5-8x21-65-8x20-2x4-1x20-2x4-8x20-66-8x18-2x4-1x22-2x4-8x18-67-8x18-2x3-1x10-4-1x10-2x3-8x18-68-8x17-2x2-1x10-6-1x10-2x2-8x17-70-8x15-2x3-1x2-3-1x5-6-1x5-3-1x2-2x3-8x15-72-8x14-2x3-1x1-5-1x3-8-1x3-5-1x1-2x3-8x14-73-8x14-2x3-1x1-5-1x3-8-1x3-5-1x1-2x3-8x14-74-8x10-2x6-1x1-5-1x3-8-1x3-5-1x1-2x6-8x10-76-8x7-2x8-1x2-3-1x4-5-1x2-1-1x4-3-1x2-2x8-8x7-78-8x5-2x4-1x3-2x3-1x8-8-1x8-2x3-1x3-2x4-8x5-80-8x4-2x3-1x7-2x2-1x6-8-1x6-2x2-1x7-2x3-8x4-83-8x2-2x2-1x10-2x2-1x4-8-1x4-2x2-1x10-2x2-8x2-86-8x1-2x2-1x16-8-1x16-2x2-8x1-44-2x46-1x40-2x47-44-2x1-1x42-2x1-8x10-71-8x7-1-2x1-1x42-2x1-8x6-77-8x6-1-1x42-1-8x2-86-8x1-3-1x38-3-8x1-86-8x2-5-1x34-5-8x2-85-8x2-10-1x24-84-8x4-28-1x10-57-1x5-42-8x2-44-8x2-83-8x4-44-8x4-50-1x9-2-1x4-15-8x5-44-8x5-2-1x16-57-8x9-121-8x12-121-8x6-59-8x4-69-1x7-44-8x1-132-8x1-132-8x8-59-8x3-11-8x8-46-8x8-2-1x3-49-8x9-7-8x9-44-8x10-53-8x8-15-8x3-44-8x13-73-8x4-42-8x7-73-1x6-8x7-38-8x19-4-8x3-11-1x8-7-1x5-25-8x5-5-8x6-32-8x2-4-8x14-58-8x20-35-8x18-59-8x24-32-8x15-65-8x22-30-8x14-73-8x16-30-8x9-12-8x6-50-8x15-4-8x7-50-8x8-56-8x20-51-8x3-59-8x21-26-8x10-15-1x3-1-1x14-24-1x7-12-8x23-22-8x23-67-8x23-18-8x26-72-8x19-14-8x32-78-8x11-10-8x37-89-8x10-20-8x16-39-8x7-38-8x7-12-8x21-69-8x9-7-8x3-110-8x59-21-1x4-46-8x70-60-8x28-6-8x14-9-8x18-54-8x33-3-8x16-14-8x8-58-8x19-8-8x22-35-8x8-19-1x6-27-8x6-8-8x16-41-8x6-10-1x10-32-8x70-16-8x2-45-8x74-53-8x4-10-8x71-66-8x70-1x2-78-8x50-38-1x10-41-8x22-3-8x22-51-8x12-20-8x15-7-8x20-59-8x68-67-8x53-85-8x66-74-8x37-101-8x35"
+
+--ui assume blank
+-->8
 --helper functions
-function drop_node(x,y)
+function drop_node(v)
 	if pl.node_ct>0 then
 		pl.node_ct-=1
 		
-		add(nodes, node.new(node,x,y))
+		add(nodes, node.new(node,v.x,v.y))
 	else
 		return
 	end
@@ -120,14 +204,14 @@ function map_colliding(obj_x, obj_y)
 	end
 end
 
-function flash(sx,sy,a,l)
+function flash(sx,sy,a,l,pen)
 	local r = 0.07 --cone angle width
 	local p = ceil(sin(-r)*2.6*l)--partitions
 	local i = -p/2
 	
 	local pts = {}
 	while i<=(p/2) do
-		local res = raycast(sx, sy, a+r*i/(p/2),l)
+		local res = raycast(sx, sy, a+r*i/(p/2),l,pen)
 		add(pts,res)
 		--line(sx, sy, res.x, res.y, l)
 		
@@ -173,9 +257,10 @@ function decomp(sx,sy,w,h,s,d)--d is default -1 is pass
 end
 
 --startx, starty, angle 0-1, length
-function raycast(sx,sy,a,l)
+function raycast(sx,sy,a,l,pen)
 	local d = 1 --change in length
 	local c = d -- curr length
+	local c_pen = pen
 	
 	while c < l do
 		local cx = sx+cos(a)*c
@@ -183,7 +268,11 @@ function raycast(sx,sy,a,l)
 		
 		pset(cx,cy,11)
 		if fget(mget(cx/8,cy/8),0) then
-			return {x=cx,y=cy}
+			if c_pen<=0 then
+				return {x=cx,y=cy}
+			else
+				c_pen-=1
+			end
 		end
 		
 		c+=d
@@ -198,26 +287,63 @@ function start_silt_time()
 	end
 end
 
-
--->8
---player
-
-pl = {
-	x = 0,
-	y = 0,
-	node_ct = 20,
-	spe = 4,
-	
-	draw = function(self)
+--credit to:huulong- modified
+function spr_r(i, j, x, y, w, h, pivot_x, pivot_y, angle, transparent_color)
+  -- precompute pixel values from tile indices: sprite source top-left, sprite size
+  local sx = 8 * i
+  local sy = 8 * j
+  local sw = 8 * w
+  local sh = 8 * h
+  -- precompute angle trigonometry
+  local flipx,flipy=false,false
+  local sa = sin(angle) 
+  local ca = cos(angle)
 		
-	end
-}
--->8
---comp vars
---title screen (assume black)
-ti="1256-8x14-115-8x22-108-8x28-103-8x32-99-8x36-95-8x40-91-8x44-88-8x46-86-8x48-83-8x52-80-8x54-78-8x56-76-8x58-74-8x60-73-8x60-72-8x62-70-8x64-68-8x66-67-8x66-66-8x68-65-8x68-64-8x70-63-8x70-62-8x72-61-8x72-60-8x74-59-8x74-59-8x74-58-8x76-57-8x76-57-8x76-57-8x76-56-8x78-55-8x78-55-8x78-55-8x78-55-8x78-55-8x78-55-8x78-55-8x78-55-8x78-55-8x78-55-8x78-55-8x78-56-8x76-57-8x76-57-8x76-57-8x76-58-8x74-59-8x74-59-8x74-60-8x31-2x10-8x31-61-8x29-2x14-8x29-62-8x26-2x5-1x8-2x5-8x26-63-8x24-2x5-1x12-2x5-8x24-64-8x21-2x5-1x16-2x5-8x21-65-8x20-2x4-1x20-2x4-8x20-66-8x18-2x4-1x22-2x4-8x18-67-8x18-2x3-1x10-4-1x10-2x3-8x18-68-8x17-2x2-1x10-6-1x10-2x2-8x17-70-8x15-2x3-1x2-3-1x5-6-1x5-3-1x2-2x3-8x15-72-8x14-2x3-1x1-5-1x3-8-1x3-5-1x1-2x3-8x14-73-8x14-2x3-1x1-5-1x3-8-1x3-5-1x1-2x3-8x14-74-8x10-2x6-1x1-5-1x3-8-1x3-5-1x1-2x6-8x10-76-8x7-2x8-1x2-3-1x4-5-1x2-1-1x4-3-1x2-2x8-8x7-78-8x5-2x4-1x3-2x3-1x8-8-1x8-2x3-1x3-2x4-8x5-80-8x4-2x3-1x7-2x2-1x6-8-1x6-2x2-1x7-2x3-8x4-83-8x2-2x2-1x10-2x2-1x4-8-1x4-2x2-1x10-2x2-8x2-86-8x1-2x2-1x16-8-1x16-2x2-8x1-44-2x46-1x40-2x47-44-2x1-1x42-2x1-8x10-71-8x7-1-2x1-1x42-2x1-8x6-77-8x6-1-1x42-1-8x2-86-8x1-3-1x38-3-8x1-86-8x2-5-1x34-5-8x2-85-8x2-10-1x24-84-8x4-28-1x10-57-1x5-42-8x2-44-8x2-83-8x4-44-8x4-50-1x9-2-1x4-15-8x5-44-8x5-2-1x16-57-8x9-121-8x12-121-8x6-59-8x4-69-1x7-44-8x1-132-8x1-132-8x8-59-8x3-11-8x8-46-8x8-2-1x3-49-8x9-7-8x9-44-8x10-53-8x8-15-8x3-44-8x13-73-8x4-42-8x7-73-1x6-8x7-38-8x19-4-8x3-11-1x8-7-1x5-25-8x5-5-8x6-32-8x2-4-8x14-58-8x20-35-8x18-59-8x24-32-8x15-65-8x22-30-8x14-73-8x16-30-8x9-12-8x6-50-8x15-4-8x7-50-8x8-56-8x20-51-8x3-59-8x21-26-8x10-15-1x3-1-1x14-24-1x7-12-8x23-22-8x23-67-8x23-18-8x26-72-8x19-14-8x32-78-8x11-10-8x37-89-8x10-20-8x16-39-8x7-38-8x7-12-8x21-69-8x9-7-8x3-110-8x59-21-1x4-46-8x70-60-8x28-6-8x14-9-8x18-54-8x33-3-8x16-14-8x8-58-8x19-8-8x22-35-8x8-19-1x6-27-8x6-8-8x16-41-8x6-10-1x10-32-8x70-16-8x2-45-8x74-53-8x4-10-8x71-66-8x70-1x2-78-8x50-38-1x10-41-8x22-3-8x22-51-8x12-20-8x15-7-8x20-59-8x68-67-8x53-85-8x66-74-8x37-101-8x35"
+		if angle > 0.25 and angle < 0.75 then
+			flipy = true
+		end
+		
+  -- in the operations below, 0.5 offsets represent pixel "inside"
+  -- we let pico-8 functions floor coordinates at the last moment for more symmetrical results
 
---ui assume blank
+  -- precompute "target disc": where we must draw pixels of the rotated sprite (relative to (x, y))
+  -- the target disc ratio is the distance between the pivot the farthest corner of the sprite rectangle
+  local max_dx = max(pivot_x, sw - pivot_x) - 0.5 
+  local max_dy = max(pivot_y, sh - pivot_y) - 0.5
+  local max_sqr_dist = max_dx * max_dx + max_dy * max_dy
+  local max_dist_minus_half = ceil(sqrt(max_sqr_dist)) - 0.5
+
+  -- iterate over disc's bounding box, then check if pixel is really in disc
+  for dx = - max_dist_minus_half, max_dist_minus_half do
+    for dy = - max_dist_minus_half, max_dist_minus_half do
+      if dx * dx + dy * dy <= max_sqr_dist then
+        -- prepare flip factors
+        local sign_x = flip_x and -1 or 1
+        local sign_y = flip_y and -1 or 1
+
+        -- if you don't use luamin (which has a bracket-related bug),
+        -- you don't need those intermediate vars, you can just inline them if you want
+        local rotated_dx = sign_x * ( ca * dx + sa * dy)
+        local rotated_dy = sign_y * (-sa * dx + ca * dy)
+
+        local xx = pivot_x + rotated_dx
+        local yy = pivot_y + rotated_dy
+
+        -- make sure to never draw pixels from the spritesheet
+        --  that are outside the source sprite
+        if xx >= 0 and xx < sw and yy >= 0 and yy < sh then
+          -- get source pixel
+          local c = sget(sx + xx, sy + yy)
+          -- ignore if transparent color
+          if c ~= transparent_color then
+            -- set target pixel color to source pixel color
+            pset(x + dx, y + dy, c)
+          end
+        end
+      end
+    end
+  end
+end
 __gfx__
 00000000000000022222222222222222222222222200000000808888008888000000888000000000000000000011110001000010000000000000000000000000
 00000000000002222222211112222211222122222220000000800888000888000000088000000000000000000010100001100110001110000000000000000000
