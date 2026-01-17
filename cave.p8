@@ -51,6 +51,7 @@ function _update()
 			--]]
 		pl.pos.x = last_x 
 		pl.pos.y = last_y
+		pl.vel = vec2:new(0,0)
 		--start_silt_time()
 	end
 	
@@ -69,14 +70,14 @@ function _draw()
 	camera(pl.pos.x-64,pl.pos.y-64)
 ----	map(0,0,-64,-64)
 	map()
-	spr(64,pl.pos.x,pl.pos.y,2,2)
+	pl:draw()
 	print(pl.pos.x..", "..pl.pos.y,pl.pos.x,pl.pos.y,10)
 	--spr_r(0,4,pl.x,pl.y,2,2,false,false,8,8,0.1,0)
 	-- collision shape debugging--
 	--rect(pl.pos.x+4, pl.pos.y+4, pl.pos.x + 10, pl.pos.y+6, 8)
 	circ(pl.pos.x+8, pl.pos.y+7, 2.5, 8)
 	-- raycast debug
-	flash(pl.pos.x, pl.pos.y, 0, 50, 3)
+	flash(flr(pl.pos.x), flr(pl.pos.y), pl.dir:ang(), 50, 3)
 	
 	
 	--draw nodes--
@@ -99,17 +100,33 @@ pl=setmetatable({
 		pos=vec2:new(0,0)
 		node_ct=20
 		vel=vec2:new(0,0)
-		acc=0.2
-		max_vel=2
-		fric=-0.01
-		ang=0
+		acc=0.05
+		max_vel=1.5
+		fric=-0.02
+		dir=vec2:new(0,0)
+		turn_sp=0.1
 	end,
 	move=function(_ENV)
 	
-		if btn(⬆️) then add_acc(vel,vec2:new(0,-acc)) end
-		if btn(⬇️) then add_acc(vel,vec2:new(0,acc)) end
-		if btn(⬅️) then add_acc(vel,vec2:new(-acc,0)) end
-		if btn(➡️) then add_acc(vel,vec2:new(acc,0)) end
+		if btn(⬆️) then 
+			add_acc(vel,vec2:new(0,-acc))
+			add_acc(dir,vec2:new(0,-turn_sp))
+		end
+		if btn(⬇️) then
+		 add_acc(vel,vec2:new(0,acc)) 
+			add_acc(dir,vec2:new(0,turn_sp))
+		end
+		if btn(⬅️) then
+		 add_acc(vel,vec2:new(-acc,0)) 
+		 add_acc(dir,vec2:new(-turn_sp,0))
+		end
+		if btn(➡️) then
+		 add_acc(vel,vec2:new(acc,0))
+		 add_acc(dir,vec2:new(turn_sp,0))
+		end
+		
+		dir=dir:norm()
+		
 		if btnp(❎) and btnp(🅾️) then drop_node(pos) end
 		
 		--friction
@@ -131,7 +148,7 @@ pl=setmetatable({
 	end,
 	
 	draw=function(_ENV)
-		
+		spr_r(0,4,flr(pos.x),flr(pos.y),2,2,8,8,dir:ang(),0)
 	end,
 
 },{__index=_ENV})
@@ -159,6 +176,10 @@ vec2={
 	norm=function(self)
 		if self:mag()<0.005 then return vec2:new(0,0) end
 		return vec2:new(self.x/self:mag(),self.y/self:mag())
+	end,
+	
+	ang=function(self)
+		return atan2(self.x,self.y)
 	end
 }
 
@@ -172,6 +193,7 @@ end
 ti="1256-8x14-115-8x22-108-8x28-103-8x32-99-8x36-95-8x40-91-8x44-88-8x46-86-8x48-83-8x52-80-8x54-78-8x56-76-8x58-74-8x60-73-8x60-72-8x62-70-8x64-68-8x66-67-8x66-66-8x68-65-8x68-64-8x70-63-8x70-62-8x72-61-8x72-60-8x74-59-8x74-59-8x74-58-8x76-57-8x76-57-8x76-57-8x76-56-8x78-55-8x78-55-8x78-55-8x78-55-8x78-55-8x78-55-8x78-55-8x78-55-8x78-55-8x78-55-8x78-55-8x78-56-8x76-57-8x76-57-8x76-57-8x76-58-8x74-59-8x74-59-8x74-60-8x31-2x10-8x31-61-8x29-2x14-8x29-62-8x26-2x5-1x8-2x5-8x26-63-8x24-2x5-1x12-2x5-8x24-64-8x21-2x5-1x16-2x5-8x21-65-8x20-2x4-1x20-2x4-8x20-66-8x18-2x4-1x22-2x4-8x18-67-8x18-2x3-1x10-4-1x10-2x3-8x18-68-8x17-2x2-1x10-6-1x10-2x2-8x17-70-8x15-2x3-1x2-3-1x5-6-1x5-3-1x2-2x3-8x15-72-8x14-2x3-1x1-5-1x3-8-1x3-5-1x1-2x3-8x14-73-8x14-2x3-1x1-5-1x3-8-1x3-5-1x1-2x3-8x14-74-8x10-2x6-1x1-5-1x3-8-1x3-5-1x1-2x6-8x10-76-8x7-2x8-1x2-3-1x4-5-1x2-1-1x4-3-1x2-2x8-8x7-78-8x5-2x4-1x3-2x3-1x8-8-1x8-2x3-1x3-2x4-8x5-80-8x4-2x3-1x7-2x2-1x6-8-1x6-2x2-1x7-2x3-8x4-83-8x2-2x2-1x10-2x2-1x4-8-1x4-2x2-1x10-2x2-8x2-86-8x1-2x2-1x16-8-1x16-2x2-8x1-44-2x46-1x40-2x47-44-2x1-1x42-2x1-8x10-71-8x7-1-2x1-1x42-2x1-8x6-77-8x6-1-1x42-1-8x2-86-8x1-3-1x38-3-8x1-86-8x2-5-1x34-5-8x2-85-8x2-10-1x24-84-8x4-28-1x10-57-1x5-42-8x2-44-8x2-83-8x4-44-8x4-50-1x9-2-1x4-15-8x5-44-8x5-2-1x16-57-8x9-121-8x12-121-8x6-59-8x4-69-1x7-44-8x1-132-8x1-132-8x8-59-8x3-11-8x8-46-8x8-2-1x3-49-8x9-7-8x9-44-8x10-53-8x8-15-8x3-44-8x13-73-8x4-42-8x7-73-1x6-8x7-38-8x19-4-8x3-11-1x8-7-1x5-25-8x5-5-8x6-32-8x2-4-8x14-58-8x20-35-8x18-59-8x24-32-8x15-65-8x22-30-8x14-73-8x16-30-8x9-12-8x6-50-8x15-4-8x7-50-8x8-56-8x20-51-8x3-59-8x21-26-8x10-15-1x3-1-1x14-24-1x7-12-8x23-22-8x23-67-8x23-18-8x26-72-8x19-14-8x32-78-8x11-10-8x37-89-8x10-20-8x16-39-8x7-38-8x7-12-8x21-69-8x9-7-8x3-110-8x59-21-1x4-46-8x70-60-8x28-6-8x14-9-8x18-54-8x33-3-8x16-14-8x8-58-8x19-8-8x22-35-8x8-19-1x6-27-8x6-8-8x16-41-8x6-10-1x10-32-8x70-16-8x2-45-8x74-53-8x4-10-8x71-66-8x70-1x2-78-8x50-38-1x10-41-8x22-3-8x22-51-8x12-20-8x15-7-8x20-59-8x68-67-8x53-85-8x66-74-8x37-101-8x35"
 
 --ui assume blank
+cui="4411-1x10-116-1x2-2x10-1x2-112-1x2-2x14-1x2-109-1x1-2x7-1x4-2x7-1x1-107-1x1-2x5-1x3-4-1x3-2x5-1x1-106-1x1-2x4-1x1-10-1x1-2x4-1x1-105-1x1-2x4-1x1-12-1x1-2x4-1x1-103-1x1-2x5-1x1-12-1x1-2x5-1x1-102-1x1-2x4-1x1-14-1x1-2x4-1x1-101-1x1-2x5-1x16-2x5-1x1-100-1x1-2x26-1x1-99-1x1-2x28-1x1-98-1x1-2x28-1x1-97-1x1-2x30-1x1-96-1x1-2x11-1x8-2x11-1x1-95-1x1-2x10-1x2-2x8-1x2-2x10-1x1-93-1x1-2x9-1x2-2x2-1x8-2x2-1x2-2x9-1x1-92-1x1-2x7-1x2-2x2-1x4-9x2-1x6-2x2-1x2-2x7-1x1-91-1x1-2x7-1x1-2x2-1x5-9x1-1x2-9x1-1x7-2x2-1x1-2x7-1x1-89-1x1-2x7-1x1-2x1-1x7-9x1-1x2-9x1-1x9-2x1-1x1-2x7-1x1-88-1x1-2x6-1x1-2x1-1x8-9x1-1x2-9x1-1x10-2x1-1x1-2x6-1x1-88-1x1-2x5-1x1-2x1-1x9-9x1-1x2-9x1-1x1-9x2-1x8-2x1-1x1-2x5-1x1-87-1x1-2x6-1x1-2x1-1x10-9x2-1x3-9x1-1x8-2x1-1x1-2x6-1x1-86-1x1-2x5-1x1-2x1-1x15-9x1-1x10-2x1-1x1-2x5-1x1-85-1x1-2x6-1x1-2x1-1x15-9x2-1x9-2x1-1x1-2x6-1x1-84-1x1-2x5-1x1-2x1-1x28-2x1-1x1-2x5-1x1-84-1x1-2x5-1x1-2x1-1x28-2x1-1x1-2x5-1x1-83-1x1-2x5-1x1-2x1-1x30-2x1-1x1-2x5-1x1-82-1x1-2x5-1x1-2x1-1x30-2x1-1x1-2x5-1x1-82-1x1-2x5-1x1-2x1-1x30-2x1-1x1-2x5-1x1-82-1x1-2x5-1x1-2x1-1x30-2x1-1x1-2x5-1x1-82-1x1-2x5-1x1-2x1-1x30-2x1-1x1-2x5-1x1-82-1x1-2x5-1x1-2x1-1x30-2x1-1x1-2x5-1x1-82-1x1-2x5-1x1-2x1-1x30-2x1-1x1-2x5-1x1-83-1x1-2x4-1x1-2x1-1x30-2x1-1x1-2x4-1x1-84-1x1-2x4-1x1-2x1-1x30-2x1-1x1-2x4-1x1-84-1x1-2x5-1x1-2x1-1x28-2x1-1x1-2x5-1x1-84-1x1-2x5-1x1-2x1-1x28-2x1-1x1-2x5-1x1-84-1x1-2x6-1x1-2x1-1x26-2x1-1x1-2x6-1x1-85-1x1-2x5-1x1-2x1-1x26-2x1-1x1-2x5-1x1-86-1x1-2x6-1x1-2x1-1x24-2x1-1x1-2x6-1x1-86-1x1-2x6-1x1-2x1-1x24-2x1-1x1-2x6-1x1-87-1x1-2x6-1x1-2x1-1x22-2x1-1x1-2x6-1x1-88-1x1-2x7-1x1-2x1-1x20-2x1-1x1-2x7-1x1-89-1x1-2x7-1x1-2x2-1x16-2x2-1x1-2x7-1x1-90-1x1-2x8-1x2-2x2-1x12-2x2-1x2-2x8-1x1-91-1x1-2x9-1x2-2x2-1x8-2x2-1x2-2x9-1x1-93-1x1-2x10-1x2-2x8-1x2-2x10-1x1-95-1x1-2x11-1x8-2x11-1x1-97-1x1-2x28-1x1-98-1x1-2x28-1x1-99-1x1-2x6-1x13-2x7-1x1-100-1x1-2x6-1x1-9x1-1x1-9x1-1x1-9x1-1x1-9x1-1x1-9x1-1x1-9x1-1x1-2x7-1x1-101-1x1-2x5-1x1-9x1-1x1-9x1-1x1-9x1-1x1-9x1-1x1-9x1-1x1-9x1-1x2-2x5-1x1-102-1x1-2x5-1x1-9x1-1x1-9x1-1x1-9x1-1x1-9x1-1x1-9x1-1x1-9x1-1x2-2x5-1x1-103-1x1-2x4-1x1-9x1-1x1-9x1-1x1-9x1-1x1-9x1-1x1-9x1-1x1-9x1-1x2-2x4-1x1-104-1x1-2x4-1x1-9x1-1x1-9x1-1x1-9x1-1x1-9x1-1x1-9x1-1x1-9x1-1x2-2x4-1x1-105-1x1-2x3-1x1-9x1-1x1-9x1-1x1-9x1-1x1-9x1-1x1-9x1-1x1-9x1-1x1-2x4-1x1-106-1x1-2x3-1x13-2x4-1x1-106-1x1-2x20-1x1-106-1x1-2x20-1x1-107-1x1-2x18-1x1-108-1x1-2x5-1x8-2x5-1x1-108-1x1-2x5-1x3-9x2-1x3-2x5-1x1-108-1x1-2x5-1x2-9x1-10x1-7x1-9x1-1x2-2x5-1x1-108-1x1-2x5-1x2-9x1-10x2-9x1-1x2-2x5-1x1-109-1x1-2x4-1x3-9x2-1x3-2x4-1x1-110-1x1-2x4-1x8-2x4-1x1-110-1x1-2x16-1x1-110-1x1-2x3-1x10-2x3-1x1-110-1x1-2x3-1x10-2x3-1x1-110-1x1-2x3-1x10-2x3-1x1-110-1x1-2x3-1x10-2x3-1x1-111-1x1-2x2-1x10-2x2-1x1-112-1x1-2x2-1x10-2x2-1x1-112-1x1-2x14-1x1-113-1x1-2x12-1x1-114-1x1-2x12-1x1-115-1x1-2x10-1x1-117-1x2-2x6-1x2-118-1x1-2x1-1x6-2x1-1x1-118-1x1-2x8-1x1-118-1x1-2x8-1x1-118-1x1-2x8-1x1-118-1x1-2x8-1x1-118-1x1-2x8-1x1-118-1x1-2x8-1x1-118-1x1-2x8-1x1-118-1x1-2x8-1x1-118-1x1-2x8-1x1-118-1x1-2x8-1x1-118-1x1-2x8-1x1-118-1x1-2x8-1x1-118-1x1-2x8-1x1"
 -->8
 --helper functions
 function drop_node(v)
@@ -397,12 +419,13 @@ function spr_r(i, j, x, y, w, h, pivot_x, pivot_y, angle, transparent_color)
   local sw = 8 * w
   local sh = 8 * h
   -- precompute angle trigonometry
-  local flipx,flipy=false,false
+  local flip_x,flip_y=false,false
   local sa = sin(angle) 
   local ca = cos(angle)
 		
 		if angle > 0.25 and angle < 0.75 then
-			flipy = true
+			--ti[2]= 10
+			flip_y = true
 		end
 		
   -- in the operations below, 0.5 offsets represent pixel "inside"
