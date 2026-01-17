@@ -75,7 +75,7 @@ function _draw()
 	--spr_r(0,4,pl.x,pl.y,2,2,false,false,8,8,0.1,0)
 	-- collision shape debugging--
 	--rect(pl.pos.x+4, pl.pos.y+4, pl.pos.x + 10, pl.pos.y+6, 8)
-	circ(pl.pos.x+8, pl.pos.y+7, 2.5, 8)
+	circ(pl.pos.x, pl.pos.y, 2.5, 8)
 	-- raycast debug
 	flash(flr(pl.pos.x), flr(pl.pos.y), pl.dir:ang(), 50, 3)
 	
@@ -206,33 +206,11 @@ function drop_node(v)
 	end
 end
 
-function map_colliding(obj_x, obj_y)
-	--[[ currently only able to do a 
-						rectangle, but would like 
-						to make an ellipse or smth					
-	]] 
-	local x1 = flr_div(obj_x+4) --prev:+2
-	local y1 = flr_div(obj_y+4) --prev: +4
-	local x2 = flr_div(obj_x+10) --prev:+12
-	local y2 = flr_div(obj_y+6)  --prev: +6
-	
-	local a = fget(mget(x1, y1),0)
-	local b = fget(mget(x1, y2),0)
-	local c = fget(mget(x2, y2),0)
-	local d = fget(mget(x2, y1),0)
-	
-	if a or b or c or d then
-		return true
-	else 
-		return false
-	end
-end
-
 function pl_map_collision()
 	
 	for i=0,1,0.01 do
-		local x = (pl.pos.x+8) + cos(t()) * 2.5
-		local y = (pl.pos.y+7) + sin(t()) * 2.5	
+		local x = (pl.pos.x) + cos(t()) * 2.5
+		local y = (pl.pos.y) + sin(t()) * 2.5	
 		
 		local id = mget(flr_div(x), flr_div(y))
 		local x1 = 0
