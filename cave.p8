@@ -30,8 +30,6 @@ function _init()
 	pl.init(pl)
 	pl.pos.x = 20
 	test = vec2:new(2,2)
-	
-	
 	--decomp(-5,-5,132,132,ti,0)
 end
 
@@ -46,7 +44,7 @@ function _update()
 	
 	
 	
-	if pl_map_collision() then
+	if pl_map_coll() then
 		--[[ ideal: have some sort of 
 							feedback that the player
 							moving back to their 
@@ -81,9 +79,14 @@ function _draw()
 	--spr_r(0,4,pl.x,pl.y,2,2,false,false,8,8,0.1,0)
 	-- collision shape debugging--
 	--rect(pl.pos.x+4, pl.pos.y+4, pl.pos.x + 10, pl.pos.y+6, 8)
-	circ(pl.pos.x, pl.pos.y, 2.5, 8)
+	--circ(pl.pos.x, pl.pos.y, 2.5, 8)
+	for i=0,1,0.01 do
+		local x = ceil(pl.pos.x) + cos(i) * 2.5
+		local y = ceil(pl.pos.y) + sin(i) * 2.5	
+		pset(x,y,8)
+	end
 	-- raycast debug
-	flash(flr(pl.pos.x), flr(pl.pos.y), pl.dir:ang(), 50, 3)
+	blackout(true)
 	
 	
 	--draw nodes--
@@ -97,7 +100,7 @@ function _draw()
 		fillp(0)
 	end 
 	move_ui()
-	print(pl.pos.x..", "..pl.pos.y,pl.pos.x,pl.pos.y,10)
+	print(stat(1)..", "..calls,pl.pos.x-10,pl.pos.y-10,10)
 end
 -->8
 --player & physics
@@ -211,6 +214,10 @@ vec2={
 	
 	ang=function(self)
 		return atan2(self.x,self.y)
+	end,
+	
+	dot=function(_ENV, v2)
+		return x*v2.x+y*v2.y
 	end
 }
 
@@ -237,95 +244,54 @@ function drop_node(v)
 	end
 end
 
-function pl_map_collision()
-	
+function pl_map_coll()
 	for i=0,1,0.01 do
-		local x = (pl.pos.x) + cos(t()) * 2.5
-		local y = (pl.pos.y) + sin(t()) * 2.5	
-		
-		local id = mget(flr_div(x), flr_div(y))
-		local x1 = 0
-		local x2 = 0
-		local y1 = 0
-		local y2 = 0
-		local height = 0
-		local t = 0
-		--[[2: top left; 3: top-right;
-						4: btm-left; 5: btm-right
-		--]]
-		if fget(id, 0) then --solid
-			
-			if fget(id,1) then --corner
-			
-				if fget(id, 2) then 
-					x1 = flr_div(x)*8
-					x2 = x1+8
-					
-					y1 = flr_div(y)*8-8
-					y2 = y1+8
-					
-					t=(x2-x)/8
-					
-					height=lerp(y2,y1,t)
-					
-					if(y<height)then
-						return true
-					end
-					--return false
-				elseif fget(id, 3) then
-					x1 = flr_div(x)*8
-					x2 = x1+8
-					
-					y1 = flr_div(y)*8+8
-					y2 = y1-8
-					
-					t=(x2-x)/8
-					
-					height=lerp(y2,y1,t)
-					
-					if(y<height)then
-						return true
-					end
-					--return false
-				elseif fget(id, 4) then
-					x1 = flr_div(x)*8
-					x2 = x1+8
-					
-					y1 = flr_div(y)*8+8
-					y2 = y1-8
-					
-					t=(x2-x)/8
-					
-					height=lerp(y2,y1,t)
-					
-					if(y>height)then
-						return true
-					end
-					--return false
-				else
-					x1 = flr_div(x)*8
-					x2 = x1+8
-					
-					y1 = flr_div(y)*8-8
-					y2 = y1+8
-					
-					t=(x2-x)/8
-					
-					height=lerp(y2,y1,t)
-					
-					if(y>height)then
-						return true
-					end
-				end
-			
-			end
-			
+		local x = ceil(pl.pos.x) + cos(i) * 2.5
+		local y = ceil(pl.pos.y) + sin(i) * 2.5	
+		if map_coll(x,y) then
 			return true
+		end
+	end
+	return false
+end
+function map_coll(x,y)
+	local id = mget(flr_div(x), flr_div(y))
+	--[[2: top left; 3: top-right;
+					4: btm-left; 5: btm-right
+	--]]
+	if fget(id, 0) then --solid
+		
+		if fget(id,1) then --corner
+		
+			if fget(id, 2) then 
+				return slope(x,y,8,0,1)
+			elseif fget(id, 3) then
+				return slope(x,y,0,8,1)
+			elseif fget(id, 4) then
+				return slope(x,y,0,8,-1)
+			else
+				return slope(x,y,8,0,-1)
+			end
 		
 		end
 		
+		return true
+	
 	end
 	return false
+end
+
+function get_norm()
+	
+end
+function slope(x,y,y1,y2,dir)
+	--local c = b[0]
+	local h = lerp(flr_div(y)*8+y1,flr_div(y)*8+y2,(x-(flr_div(x)*8))/8)
+	if dir == 1 then 
+		return h<y
+	else
+		return h>y
+	end
 end
 
 --credit: sophie houlden
@@ -337,21 +303,6 @@ function lerp(a,b,t)
 	return (1-t)*a+t*b
 end
 
-function flash(sx,sy,a,l,pen)
-	local r = 0.07 --cone angle width
-	local p = ceil(sin(-r)*2.6*l)--partitions
-	local i = -p/2
-	
-	local pts = {}
-	while i<=(p/2) do
-		local res = raycast(sx, sy, a+r*i/(p/2),l,pen)
-		add(pts,res)
-		--line(sx, sy, res.x, res.y, l)
-		
-		i+=1
-	end
-
-end
 
 function decomp(sx,sy,w,h,s,d)--d is default -1 is pass
 	local l = split(s,"-",false)
@@ -387,30 +338,6 @@ function decomp(sx,sy,w,h,s,d)--d is default -1 is pass
 		end
 	end
 	
-end
-
---startx, starty, angle 0-1, length
-function raycast(sx,sy,a,l,pen)
-	local d = 1 --change in length
-	local c = d -- curr length
-	local c_pen = pen
-	
-	while c < l do
-		local cx = sx+cos(a)*c
-		local cy = sy+sin(a)*c
-		
-		pset(cx,cy,11)
-		if fget(mget(cx/8,cy/8),0) then
-			if c_pen<=0 then
-				return {x=cx,y=cy}
-			else
-				c_pen-=1
-			end
-		end
-		
-		c+=d
-	end
-	return {x = sx+cos(a)*l, y = sy+sin(a)*l}
 end
 
 function start_silt_time()
@@ -478,6 +405,77 @@ function spr_r(i, j, x, y, w, h, pivot_x, pivot_y, angle, transparent_color)
     end
   end
 end
+-->8
+--flash
+
+function blackout(on)
+	local pts = {}
+	local plx=flr(pl.pos.x)
+	local ply=flr(pl.pos.y)
+	local t = flash(plx, ply, pl.dir:ang(), 50, 3, pts)
+	
+	
+end
+
+calls = 0
+function flash(sx,sy,a,l,pen,pts)
+	calls = 0
+	local r = 0.07 --cone angle width
+	local p = 10--partitions
+	local i = -p/2
+	
+	local casts = 0
+	local sd=0
+	
+	local t={
+		minx=sx,
+		maxx=sx,
+		miny=sy,
+		maxy=sy
+	}
+	while i<(p/2)-1 do
+		local pt=raycast(sx,sy,sd,a+r*i/(p/2),l,pen,pts)
+		add(pts,pt)
+		if pt.x<t.minx then t.minx=pt.x end
+		if pt.x>t.maxx then t.maxx=pt.x end
+		if pt.y<t.miny then t.miny=pt.y end
+		if pt.y>t.maxy then t.maxy=pt.y end
+		--add(pts,res)
+		--line(sx, sy, res.x, res.y, l)
+		i+=1
+	end
+	
+	for pt in all(pts) do
+		pset(pt.x,pt.y,11)
+	end
+	return targs
+end
+
+--startx, starty,start dist, angle 0-1, length
+function raycast(sx,sy,sd,a,l,pen,pts,forc)
+	local d = 1 --change in length
+	local c = d+flr(sd) -- curr length
+	local c_pen = pen
+	
+	local cx,cy = 0,0
+	while c < l do
+		cx = flr(sx+cos(a)*c)
+		cy = flr(sy+sin(a)*c)
+		
+		if map_coll(cx,cy) then
+			calls+=1
+			if c_pen<=0 then
+				return vec2:new(cx,cy)
+			else
+				c_pen-=1
+			end
+		end
+		
+		c+=d
+	end
+	return vec2:new(cx,cy)
+end
+
 __gfx__
 00000000000000022222222222222222222222222200000000808888008888000000888000000000000000000011110001000010000000000000000000000000
 00000000000002222222211112222211222122222220000000800888000888000000088000000000000000000010100001100110001110000000000000000000
