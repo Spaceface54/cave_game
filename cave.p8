@@ -31,92 +31,24 @@ function _init()
 	pl.pos.x = 20
 	test = vec2:new(2,2)
 	
+	init_menu()
+	
 	--b=c[0]
 	--decomp(-5,-5,132,132,ti,0)
 end
 
-curr_lcout = 0
-function _update()
-	
-	local last_x=pl.pos.x
-	local last_y=pl.pos.y
-	pl:move(curr_lcout>0)
-	
-	if curr_lcout>0 then curr_lcout-=0.034 end
-	
-	
-	local c = pl_map_coll()
-	if c[1] then
-		--[[ ideal: have some sort of 
-							feedback that the player
-							moving back to their 
-							last position
-			--]]
-		--pl.pos.x = last_x 
-		--pl.pos.y = last_y
-		if curr_lcout<=0 then
-			pl.vel = ref(pl.vel,c[2]):norm()*pl.bump_sp
-			curr_lcout = pl.bump_lcout
-		end
-		--start_silt_time()
-	end
-	
-	if silt_timer > 0 then
-		silt_timer-=1
-		silt_sz_up+=0.8
-	else
-		silt_timer = 0
-	end
-	
-	--meters
-	if pl.oxy > 0 then
-		pl.oxy-=0.034
-	else
-		--should be game over, instead
-		pl.oxy = 0
-	end
-	if pl.bat > 0 then
-		pl.bat-=0.034
-	else
-		pl.bat = 0
-	end
+function init_menu()
+	--functions are in tab 5
+	_update = update_title
+	_draw = draw_title
 end
 
-function _draw()
-	cls(0)
-	
-	camera(pl.pos.x-64,pl.pos.y-64)
-----	map(0,0,-64,-64)
-	map()
-	pl:draw()
-	--print(pl.pos.x..", "..pl.pos.y,pl.pos.x,pl.pos.y,10)
-	--spr_r(0,4,pl.x,pl.y,2,2,false,false,8,8,0.1,0)
-	-- collision shape debugging--
-	--rect(pl.pos.x+4, pl.pos.y+4, pl.pos.x + 10, pl.pos.y+6, 8)
-	--circ(pl.pos.x, pl.pos.y, 2.5, 8)
---	for i=0,1,0.01 do
---		local x = ceil(pl.pos.x) + cos(i) * 2.5
---		local y = ceil(pl.pos.y) + sin(i) * 2.5	
---		pset(x,y,8)
---	end
-	-- raycast debug
-	blackout(true)
-	
-	
-	--draw nodes--
-	foreach(nodes, node.draw)
-	
---	while costatus(c) =="suspended" and costatus(c)~="dead" do 
-	if silt_timer > 0 then
- --	fillp(0b0011010101101000.100)
-		fillp(☉)
-		circfill(pl.pos.x, pl.pos.y, silt_sz_up, 1)
-		fillp(0)
-	end 
-	draw_ui()
-	print(stat(1)..", "..calls,pl.pos.x-10,pl.pos.y-10,10)
-	
+function init_game()
+	--functions are in tab 6
+	_update = update_game
+	_draw = draw_game
 end
+
 -->8
 --player & physics
 pl=setmetatable({
@@ -614,6 +546,107 @@ function raycast(sx,sy,sd,a,l,pen,pts,forc)
 	return vec2:new(cx,cy)
 end
 
+-->8
+--title draw & update
+
+function draw_title() 
+	cls()
+	decomp(-5,-5,132,132,ti,0)
+	print("good evening, \nthis is the title screen",7)
+	print("could you please press ❎?",7)
+end
+
+function update_title()
+	if(btnp(❎)) then
+		init_game()
+	end
+end
+-->8
+--gameplay draw & update
+
+function draw_game()
+	cls(0)
+	
+	camera(pl.pos.x-64,pl.pos.y-64)
+----	map(0,0,-64,-64)
+	map()
+	pl:draw()
+	--print(pl.pos.x..", "..pl.pos.y,pl.pos.x,pl.pos.y,10)
+	--spr_r(0,4,pl.x,pl.y,2,2,false,false,8,8,0.1,0)
+	-- collision shape debugging--
+	--rect(pl.pos.x+4, pl.pos.y+4, pl.pos.x + 10, pl.pos.y+6, 8)
+	--circ(pl.pos.x, pl.pos.y, 2.5, 8)
+--	for i=0,1,0.01 do
+--		local x = ceil(pl.pos.x) + cos(i) * 2.5
+--		local y = ceil(pl.pos.y) + sin(i) * 2.5	
+--		pset(x,y,8)
+--	end
+	-- raycast debug
+	blackout(true)
+	
+	
+	--draw nodes--
+	foreach(nodes, node.draw)
+	
+--	while costatus(c) =="suspended" and costatus(c)~="dead" do 
+	if silt_timer > 0 then
+ --	fillp(0b0011010101101000.100)
+		fillp(☉)
+		circfill(pl.pos.x, pl.pos.y, silt_sz_up, 1)
+		fillp(0)
+	end 
+	draw_ui()
+	print(stat(1)..", "..calls,pl.pos.x-10,pl.pos.y-10,10)
+	
+end
+
+
+curr_lcout = 0
+function update_game()
+		
+	local last_x=pl.pos.x
+	local last_y=pl.pos.y
+	pl:move(curr_lcout>0)
+	
+	if curr_lcout>0 then curr_lcout-=0.034 end
+	
+	
+	local c = pl_map_coll()
+	if c[1] then
+		--[[ ideal: have some sort of 
+							feedback that the player
+							moving back to their 
+							last position
+			--]]
+		--pl.pos.x = last_x 
+		--pl.pos.y = last_y
+		if curr_lcout<=0 then
+			pl.vel = ref(pl.vel,c[2]):norm()*pl.bump_sp
+			curr_lcout = pl.bump_lcout
+		end
+		--start_silt_time()
+	end
+	
+	if silt_timer > 0 then
+		silt_timer-=1
+		silt_sz_up+=0.8
+	else
+		silt_timer = 0
+	end
+	
+	--meters
+	if pl.oxy > 0 then
+		pl.oxy-=0.034
+	else
+		--should be game over, instead
+		pl.oxy = 0
+	end
+	if pl.bat > 0 then
+		pl.bat-=0.034
+	else
+		pl.bat = 0
+	end
+end
 __gfx__
 00000000000000022222222222222222222222222200000000808888008888000000888000000000000000000011110001000010000000000000000000000000
 00000000000002222222211112222211222122222220000000800888000888000000088000000000000000000010100001100110001110000000000000000000
