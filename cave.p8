@@ -125,7 +125,7 @@ pl=setmetatable({
 		if btnp(❎) then
 		 drop_node(pos) 
 		else
-			if btnp(🅾️) and batt>0 then
+			if btnp(🅾️) and bat>0 then
 				light=not light
 			end
 		end
@@ -170,7 +170,7 @@ pl=setmetatable({
 			--should be game over, instead
 			oxy = 0
 			sfx(5,1) 
-			--send us to the death screen, maybe?	
+			init_dead()
 		end
 		if light then
 			if (bat > 0) then
